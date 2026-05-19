@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pomodoro 60 · CPE · Productividad con Luis</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --negro: #1A1A1A;
+    --blanco: #FAFAF8;
+    --dorado: #C9A84C;
+    --ds: #E8C97E;
+    --do: #A8873A;
+    --verde: #3D7A78;
+    --gc: #F5F5F3;
+    --gm: #E0E0DD;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family:'Poppins',sans-serif;
+    background:#EAEAE8;
+    color:var(--negro);
+    min-height:100vh;
+    padding:28px 16px 80px;
+  }
+
+  /* TOOLBAR */
+  .toolbar {
+    max-width:620px; margin:0 auto 20px;
+    background:var(--negro); border-radius:10px;
+    padding:11px 18px;
+    display:flex; align-items:center;
+    justify-content:space-between; flex-wrap:wrap; gap:8px;
+  }
+  .tb-brand { font-size:12px; font-weight:800; color:var(--blanco); }
+  .tb-brand span { color:var(--dorado); }
+  .btn-pdf {
+    font-family:'Poppins',sans-serif;
+    font-size:11px; font-weight:700;
+    padding:6px 14px; border-radius:6px;
+    cursor:pointer; border:none;
+    background:var(--dorado); color:var(--negro); transition:all .2s;
+  }
+  .btn-pdf:hover { background:var(--ds); }
+
+  /* HOJA */
+  .hoja {
+    max-width:620px; margin:0 auto;
+    background:var(--blanco);
+    border-radius:16px;
+    box-shadow:0 6px 48px rgba(0,0,0,.13);
+    overflow:hidden;
+  }
+
+  /* CABECERA */
+  .cab {
+    background:var(--negro);
+    padding:22px 36px 20px;
+    position:relative; overflow:hidden;
+  }
+  .cab::before {
+    content:""; position:absolute; top:-60px; right:-60px;
+    width:200px; height:200px; border-radius:50%;
+    background:rgba(201,168,76,.05); pointer-events:none;
+  }
+  .cab-tag {
+    display:inline-block;
+    background:rgba(61,122,120,.15);
+    border:1px solid rgba(61,122,120,.3);
+    color:#7ABAB8; font-size:9px; font-weight:800;
+    letter-spacing:2.5px; text-transform:uppercase;
+    padding:3px 10px; border-radius:2px; margin-bottom:10px;
+  }
+  .cab-titulo {
+    font-size:clamp(18px,3vw,24px);
+    font-weight:900; color:var(--blanco);
+    line-height:1.1; letter-spacing:-0.5px;
+  }
+  .cab-titulo em { color:var(--dorado); font-style:normal; }
+  .cita {
+    margin-top:8px;
+    border-left:2px solid rgba(201,168,76,.3);
+    padding:4px 12px;
+    font-size:10.5px; color:rgba(255,255,255,.3);
+    font-style:italic;
+  }
+  .cab-campos {
+    display:grid; grid-template-columns:1fr 1fr 1fr;
+    gap:9px; margin-top:14px;
+  }
+  @media(max-width:480px){ .cab-campos { grid-template-columns:1fr; } }
+  .cab-campo label {
+    font-size:8px; font-weight:800; letter-spacing:2px;
+    text-transform:uppercase; color:rgba(255,255,255,.3);
+    display:block; margin-bottom:4px;
+  }
+  .cab-campo input {
+    width:100%; background:rgba(255,255,255,.07);
+    border:1px solid rgba(255,255,255,.12); border-radius:6px;
+    padding:7px 11px; color:var(--blanco);
+    font-family:'Poppins',sans-serif; font-size:12.5px;
+    font-weight:600; transition:border-color .2s;
+  }
+  .cab-campo input:focus { outline:none; border-color:rgba(201,168,76,.5); }
+  .cab-campo input::placeholder { color:rgba(255,255,255,.2); font-weight:400; }
+
+  /* REGLAS */
+  .reglas {
+    background:rgba(201,168,76,.07);
+    border-bottom:1px solid rgba(201,168,76,.12);
+    padding:10px 36px;
+    display:flex; flex-wrap:wrap; gap:6px 18px;
+    align-items:center; justify-content:center;
+  }
+  .regla {
+    font-size:10.5px; font-weight:700;
+    color:var(--do); display:flex; align-items:center; gap:5px;
+  }
+
+  /* CUERPO */
+  .cuerpo { padding:22px 36px 36px; }
+  @media(max-width:480px){ .cuerpo { padding:16px 18px 28px; } }
+
+  /* BLOQUE HEADER */
+  .bloque-hdr {
+    display:flex; align-items:center; gap:10px; margin-bottom:12px;
+  }
+  .bloque-num {
+    width:28px; height:28px; border-radius:7px;
+    background:var(--negro); color:var(--dorado);
+    font-size:12px; font-weight:900;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .bloque-tit {
+    font-size:10.5px; font-weight:800;
+    letter-spacing:2px; text-transform:uppercase; color:var(--negro);
+  }
+  .bloque-hint { margin-left:auto; font-size:10px; color:#bbb; }
+
+  /* TAREA */
+  .tarea-box {
+    background:var(--negro); border-radius:10px;
+    padding:14px 16px; margin-bottom:14px;
+  }
+  .tarea-label {
+    font-size:8.5px; font-weight:800; letter-spacing:2px;
+    text-transform:uppercase; color:rgba(255,255,255,.3); margin-bottom:7px;
+  }
+  .tarea-box input {
+    width:100%; background:rgba(255,255,255,.07);
+    border:1px solid rgba(255,255,255,.12); border-radius:7px;
+    padding:10px 14px; color:var(--blanco);
+    font-family:'Poppins',sans-serif; font-size:14px;
+    font-weight:700; transition:all .2s; margin-bottom:8px;
+  }
+  .tarea-box input:last-child { margin-bottom:0; }
+  .tarea-box input:focus { outline:none; border-color:rgba(201,168,76,.5); background:rgba(255,255,255,.1); }
+  .tarea-box input::placeholder { color:rgba(255,255,255,.2); font-weight:400; font-size:12.5px; }
+
+  /* CHECKBOXES */
+  .chk-tit {
+    font-size:8.5px; font-weight:800; letter-spacing:2px;
+    text-transform:uppercase; color:#aaa; margin-bottom:8px;
+  }
+  .chk-grid {
+    display:grid; grid-template-columns:1fr 1fr; gap:6px;
+  }
+  @media(max-width:400px){ .chk-grid { grid-template-columns:1fr; } }
+  .chk-item {
+    display:flex; align-items:center; gap:8px;
+    background:var(--gc); border:1.5px solid var(--gm);
+    border-radius:7px; padding:8px 10px;
+    cursor:pointer; transition:all .2s; user-select:none;
+  }
+  .chk-item.on { background:rgba(61,122,120,.08); border-color:rgba(61,122,120,.3); }
+  .chk-box {
+    width:18px; height:18px; border-radius:4px;
+    border:2px solid var(--gm); background:var(--blanco);
+    display:flex; align-items:center; justify-content:center;
+    font-size:10px; font-weight:900; color:transparent;
+    flex-shrink:0; transition:all .2s;
+  }
+  .chk-item.on .chk-box { background:var(--verde); border-color:var(--verde); color:var(--blanco); }
+  .chk-lbl { font-size:11.5px; font-weight:600; color:#555; line-height:1.3; }
+  .chk-item.on .chk-lbl { color:var(--verde); }
+
+  /* DIVISOR */
+  .div { height:1px; background:linear-gradient(90deg,transparent,var(--gm),transparent); margin:20px 0; }
+
+  /* TIMER */
+  .timer-wrap {
+    background:var(--negro); border-radius:14px;
+    padding:28px 24px 24px; text-align:center;
+    position:relative; overflow:hidden;
+  }
+  .timer-wrap::before {
+    content:""; position:absolute; top:-80px; left:50%;
+    transform:translateX(-50%);
+    width:340px; height:340px; border-radius:50%;
+    background:radial-gradient(circle,rgba(201,168,76,.06) 0%,transparent 70%);
+    pointer-events:none;
+  }
+  .timer-lbl {
+    font-size:9px; font-weight:800; letter-spacing:3px;
+    text-transform:uppercase; color:rgba(255,255,255,.3);
+    margin-bottom:10px; position:relative;
+  }
+  .timer-num {
+    font-size:clamp(64px,15vw,100px);
+    font-weight:900; color:var(--blanco);
+    letter-spacing:-3px; line-height:1;
+    font-variant-numeric:tabular-nums;
+    position:relative; transition:color .5s;
+  }
+  .timer-num.running { color:var(--dorado); }
+  .timer-num.done { color:var(--verde); }
+  .prog-wrap {
+    background:rgba(255,255,255,.08);
+    border-radius:100px; height:5px;
+    margin:14px auto 22px; max-width:300px; overflow:hidden;
+  }
+  .prog-bar {
+    height:100%; border-radius:100px;
+    background:linear-gradient(90deg,var(--do),var(--dorado));
+    width:100%; transition:width 1s linear;
+  }
+  .btn-ini {
+    font-family:'Poppins',sans-serif;
+    font-size:16px; font-weight:900;
+    padding:15px 56px; border-radius:10px;
+    cursor:pointer; border:none;
+    background:var(--dorado); color:var(--negro);
+    letter-spacing:1px; transition:all .25s; position:relative;
+  }
+  .btn-ini:hover:not(:disabled) {
+    background:var(--ds); transform:translateY(-2px);
+    box-shadow:0 8px 24px rgba(201,168,76,.3);
+  }
+  .btn-ini:disabled { opacity:.2; cursor:not-allowed; transform:none; box-shadow:none; }
+  .timer-aviso {
+    font-size:10px; color:rgba(255,255,255,.2);
+    margin-top:10px; font-style:italic; position:relative;
+  }
+  .msg-final {
+    display:none; margin-top:16px;
+    background:rgba(61,122,120,.12);
+    border:1px solid rgba(61,122,120,.25);
+    border-radius:10px; padding:16px 18px; text-align:center;
+  }
+  .msg-final.show { display:block; }
+  .msg-ico { font-size:30px; margin-bottom:6px; }
+  .msg-txt { font-size:14px; font-weight:900; color:#7ABAB8; line-height:1.4; }
+  .msg-sub { font-size:11px; color:rgba(255,255,255,.3); margin-top:5px; font-style:italic; }
+
+  /* SALIDA */
+  .res-tit {
+    font-size:8.5px; font-weight:800; letter-spacing:2px;
+    text-transform:uppercase; color:#aaa; margin-bottom:8px;
+  }
+  .res-grid {
+    display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:14px;
+  }
+  @media(max-width:400px){ .res-grid { grid-template-columns:1fr; } }
+  .res-item {
+    display:flex; align-items:center; gap:8px;
+    background:var(--gc); border:1.5px solid var(--gm);
+    border-radius:7px; padding:9px 11px;
+    cursor:pointer; transition:all .2s; user-select:none;
+  }
+  .res-item.on { background:#FFFCF3; border-color:var(--dorado); }
+  .res-dot {
+    width:16px; height:16px; border-radius:50%;
+    border:2px solid var(--gm); background:var(--blanco);
+    flex-shrink:0; transition:all .2s;
+  }
+  .res-item.on .res-dot { background:var(--dorado); border-color:var(--dorado); }
+  .res-lbl { font-size:12px; font-weight:600; color:#555; }
+  .res-item.on .res-lbl { color:var(--do); font-weight:700; }
+
+  /* CAMPOS SALIDA */
+  .sal-lbl {
+    font-size:8.5px; font-weight:800; letter-spacing:2px;
+    text-transform:uppercase; color:#aaa; margin-bottom:5px;
+  }
+  .sal-input {
+    width:100%; font-family:'Poppins',sans-serif;
+    font-size:13px; color:var(--negro);
+    background:var(--gc); border:1.5px solid var(--gm);
+    border-radius:7px; padding:9px 13px;
+    transition:border-color .2s, background .2s; margin-bottom:12px;
+  }
+  .sal-input:focus { outline:none; border-color:var(--dorado); background:#FFFCF3; }
+  .sal-input::placeholder { color:#C8C8C4; font-size:12px; }
+  .sal-input:last-child { margin-bottom:0; }
+
+  /* PIE */
+  .pie {
+    background:var(--gc); padding:12px 36px;
+    display:flex; justify-content:space-between;
+    align-items:center; flex-wrap:wrap; gap:8px;
+    border-top:1px solid var(--gm);
+  }
+  .pie-brand { font-size:9px; font-weight:800; letter-spacing:1.5px; text-transform:uppercase; color:#bbb; }
+  .pie-brand strong { color:var(--do); }
+  .pie-lema { font-size:9px; color:#bbb; font-style:italic; }
+
+  /* TOAST */
+  .toast {
+    position:fixed; bottom:24px; left:50%;
+    transform:translateX(-50%) translateY(20px);
+    background:var(--negro); color:var(--blanco);
+    padding:10px 20px; border-radius:8px;
+    font-size:12px; font-weight:700;
+    opacity:0; transition:all .3s; pointer-events:none; z-index:999;
+  }
+  .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+  @media print {
+    body { background:white; padding:0; }
+    .toolbar { display:none !important; }
+    .hoja { box-shadow:none; border-radius:0; }
+    @page { margin:1cm; }
+  }
+  .aprendizaje-box {
+    background:linear-gradient(135deg,rgba(201,168,76,.07),rgba(201,168,76,.03));
+    border:1.5px solid rgba(201,168,76,.2);
+    border-radius:10px; padding:14px 16px;
+  }
+  .ap-label {
+    font-size:10px; font-weight:800; letter-spacing:1.5px;
+    text-transform:uppercase; color:var(--do); margin-bottom:8px;
+  }
+  .ap-input { margin-bottom:0 !important; font-size:14px; font-weight:700; color:var(--do); }
+  .ap-input::placeholder { color:rgba(168,135,58,.35); font-size:12px; font-weight:400; }
+  .ap-input:focus { border-color:var(--dorado) !important; background:#FFFCF3 !important; }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <div class="tb-brand">Productividad con <span>Luis</span> · CPE</div>
+  <button class="btn-pdf" onclick="window.print()">⬇ Guardar PDF</button>
+</div>
+
+<div class="hoja">
+
+  <!-- CABECERA -->
+  <div class="cab">
+    <div class="cab-tag">CPE · Pomodoro profundo · 60 min</div>
+    <div class="cab-titulo">60 minutos de<br><em>trabajo real.</em></div>
+    <div class="cita">Construye con enfoque. Un día a la vez. — Luis</div>
+    <div class="cab-campos">
+      <div class="cab-campo">
+        <label>Tu nombre</label>
+        <input type="text" id="c-nombre" placeholder="¿Cómo te llamas?">
+      </div>
+      <div class="cab-campo">
+        <label>¿Cómo llegás hoy?</label>
+        <input type="text" id="c-estado" placeholder="Una palabra">
+      </div>
+      <div class="cab-campo">
+        <label>Fecha</label>
+        <input type="text" id="c-fecha" placeholder="">
+      </div>
+    </div>
+  </div>
+
+  <!-- REGLAS -->
+  <div class="reglas">
+    <div class="regla">🔇 Micrófonos desactivados</div>
+    <div class="regla">📷 Cámaras opcionales</div>
+    <div class="regla">🚫 Sin preguntas ni respuestas</div>
+    <div class="regla">💬 Aportes y dudas al final</div>
+  </div>
+
+  <div class="cuerpo">
+
+    <!-- BLOQUE 1 · ENTRADA -->
+    <div class="bloque-hdr">
+      <div class="bloque-num">1</div>
+      <div class="bloque-tit">Entrada · Antes de iniciar</div>
+      <div class="bloque-hint">2 min</div>
+    </div>
+
+    <!-- TAREA -->
+    <div class="tarea-box">
+      <div class="tarea-label">Hoy trabajo en:</div>
+      <input type="text" id="t1" placeholder="Tarea principal — sé específico.">
+      <input type="text" id="t2" placeholder="Segunda tarea — opcional.">
+    </div>
+
+    <!-- CHECKBOXES -->
+    <div class="chk-tit">✅ Marca todo antes de iniciar:</div>
+    <div class="chk-grid">
+      <div class="chk-item" onclick="this.classList.toggle('on')">
+        <div class="chk-box">✓</div><div class="chk-lbl">📵 Celular en silencio / boca abajo</div>
+      </div>
+      <div class="chk-item" onclick="this.classList.toggle('on')">
+        <div class="chk-box">✓</div><div class="chk-lbl">🔕 Notificaciones apagadas</div>
+      </div>
+      <div class="chk-item" onclick="this.classList.toggle('on')">
+        <div class="chk-box">✓</div><div class="chk-lbl">💧 Agua a la mano</div>
+      </div>
+      <div class="chk-item" onclick="this.classList.toggle('on')">
+        <div class="chk-box">✓</div><div class="chk-lbl">🎧 Música / silencio listo</div>
+      </div>
+      <div class="chk-item" onclick="this.classList.toggle('on')">
+        <div class="chk-box">✓</div><div class="chk-lbl">🚫 Cerré pestañas innecesarias</div>
+      </div>
+      <div class="chk-item" onclick="this.classList.toggle('on')">
+        <div class="chk-box">✓</div><div class="chk-lbl">🧠 Respiré — estoy listo</div>
+      </div>
+    </div>
+
+    <div class="div"></div>
+
+    <!-- TIMER -->
+    <div class="timer-wrap">
+      <div class="timer-lbl">⏱ Timer · 60 minutos</div>
+      <div class="timer-num" id="timer">60:00</div>
+      <div class="prog-wrap">
+        <div class="prog-bar" id="prog"></div>
+      </div>
+      <button class="btn-ini" id="btn-ini" onclick="iniciar()">INICIAR</button>
+      <div class="timer-aviso">Una vez iniciado no se puede pausar — ese es el compromiso.</div>
+      <div class="msg-final" id="msg-final">
+        <div class="msg-ico">🎯</div>
+        <div class="msg-txt">60 minutos de enfoque real.<br>Eso es construir.</div>
+        <div class="msg-sub">Construye con enfoque. Un día a la vez. — Luis</div>
+      </div>
+    </div>
+
+    <div class="div"></div>
+
+    <!-- BLOQUE 2 · SALIDA -->
+    <div class="bloque-hdr">
+      <div class="bloque-num">2</div>
+      <div class="bloque-tit">Salida · Al terminar</div>
+      <div class="bloque-hint">3 min</div>
+    </div>
+
+    <div class="res-tit">¿Cómo resultó el bloque?</div>
+    <div class="res-grid">
+      <div class="res-item" onclick="selRes(this)">
+        <div class="res-dot"></div><div class="res-lbl">✅ Completé la tarea</div>
+      </div>
+      <div class="res-item" onclick="selRes(this)">
+        <div class="res-dot"></div><div class="res-lbl">◑ Avancé parcialmente</div>
+      </div>
+      <div class="res-item" onclick="selRes(this)">
+        <div class="res-dot"></div><div class="res-lbl">🔁 Necesito otro bloque</div>
+      </div>
+      <div class="res-item" onclick="selRes(this)">
+        <div class="res-dot"></div><div class="res-lbl">⚡ Surgió algo más urgente</div>
+      </div>
+    </div>
+
+    <div class="sal-lbl">Lo que avancé:</div>
+    <input type="text" class="sal-input" id="avance" placeholder="Una línea — ¿qué existe ahora que antes no existía?">
+
+    <div class="sal-lbl">Próximo paso concreto:</div>
+    <input type="text" class="sal-input" id="paso" placeholder="¿Qué sigue? — opcional, para no perder el hilo.">
+
+    <div class="div"></div>
+
+    <div class="aprendizaje-box">
+      <div class="ap-label">💡 Mi principal aprendizaje de esta sesión</div>
+      <input type="text" class="sal-input ap-input" id="aprendizaje" placeholder="Una frase o una palabra — ¿qué te llevas de estos 60 minutos?">
+    </div>
+
+  </div>
+
+  <div class="pie">
+    <div class="pie-brand">Productividad con <strong>Luis</strong> · CPE</div>
+    <div class="pie-lema">Construye con enfoque. Un día a la vez.</div>
+    <div class="pie-brand">Comunidad <strong>CPE</strong> en Skool</div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const TOTAL = 60 * 60;
+  let remaining = TOTAL;
+  let interval = null;
+  let started = false;
+
+  // Fecha automática
+  (function(){
+    const d = new Date();
+    const dd = String(d.getDate()).padStart(2,'0');
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const aaaa = d.getFullYear();
+    document.getElementById('c-fecha').placeholder = dd+'/'+mm+'/'+aaaa;
+  })();
+
+  function iniciar(){
+    if(started) return;
+    started = true;
+    const btn = document.getElementById('btn-ini');
+    const display = document.getElementById('timer');
+    const bar = document.getElementById('prog');
+    const msg = document.getElementById('msg-final');
+    btn.disabled = true;
+    display.classList.add('running');
+
+    interval = setInterval(()=>{
+      remaining--;
+      const m = Math.floor(remaining / 60);
+      const s = remaining % 60;
+      display.textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+      bar.style.width = ((remaining / TOTAL) * 100) + '%';
+
+      if(remaining <= 10 && remaining > 0){
+        display.style.opacity = display.style.opacity === '0.4' ? '1' : '0.4';
+      }
+
+      if(remaining <= 0){
+        clearInterval(interval);
+        display.textContent = '00:00';
+        display.style.opacity = '1';
+        display.classList.remove('running');
+        display.classList.add('done');
+        bar.style.width = '0%';
+        bar.style.background = 'var(--verde)';
+        msg.classList.add('show');
+        sonido();
+        toast('🎯 ¡60 minutos completados!');
+      }
+    }, 1000);
+  }
+
+  function sonido(){
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      [0, 0.35, 0.7].forEach(d => {
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.frequency.value = 880; o.type = 'sine';
+        g.gain.setValueAtTime(0, ctx.currentTime + d);
+        g.gain.linearRampToValueAtTime(0.4, ctx.currentTime + d + 0.05);
+        g.gain.linearRampToValueAtTime(0, ctx.currentTime + d + 0.45);
+        o.start(ctx.currentTime + d);
+        o.stop(ctx.currentTime + d + 0.5);
+      });
+    } catch(e){}
+  }
+
+  function selRes(el){
+    document.querySelectorAll('.res-item').forEach(r => r.classList.remove('on'));
+    el.classList.add('on');
+  }
+
+  function toast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3500);
+  }
+</script>
+</body>
+</html>
